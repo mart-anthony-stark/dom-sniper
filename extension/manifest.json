@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "DOM XSS Tracer",
+  "name": "DOMSniper",
   "version": "1.0",
   "description": "Traces DOM XSS by hooking dangerous sinks and tracking tainted URL data.",
   "permissions": [
@@ -36,6 +36,6 @@
   "action": {
     "default_icon": "icon.png",
     "default_popup": "popup.html",
-    "default_title": "DOM XSS Tracer"
+    "default_title": "DOMSniper"
   }
 }

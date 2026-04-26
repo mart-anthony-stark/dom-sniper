@@ -59,11 +59,11 @@
     
     if (isTainted) {
       const refUrl = getReferenceUrl(sinkName);
-      console.warn(`%c[DOM XSS Tracer] 🚨 TAINTED SINK DETECTED!\nSink: ${sinkName}\nPayload: ${payload}\nTaint: ${foundTaint}\nSource: ${callerLine}\nReference: ${refUrl}`, 'background: red; color: white; display: block; padding: 5px;');
+      console.warn(`%c[DOMSniper] 🚨 TAINTED SINK DETECTED!\nSink: ${sinkName}\nPayload: ${payload}\nTaint: ${foundTaint}\nSource: ${callerLine}\nReference: ${refUrl}`, 'background: red; color: white; display: block; padding: 5px;');
       visualAlert(sinkName, payload, foundTaint, callerLine, refUrl);
       
       // Dispatch event to be picked up by the Isolated World content.js and sent to the background script
-      window.dispatchEvent(new CustomEvent('DOM_XSS_TRACER_ALERT', { 
+      window.dispatchEvent(new CustomEvent('DOMSNIPER_ALERT', { 
         detail: { 
           sinkName: sinkName, 
           taint: foundTaint, 
@@ -74,7 +74,7 @@
         } 
       }));
     } else {
-      console.info(`[DOM XSS Tracer] Sink called: ${sinkName} \nPayload snippet: ${payload.substring(0,50)} \nSource: ${callerLine}`);
+      console.info(`[DOMSniper] Sink called: ${sinkName} \nPayload snippet: ${payload.substring(0,50)} \nSource: ${callerLine}`);
     }
   }
 
@@ -191,9 +191,9 @@
       }
     });
   } catch (e) {
-    console.error("[DOM XSS Tracer] Failed to hook innerHTML", e);
+    console.error("[DOMSniper] Failed to hook innerHTML", e);
   }
 
-  console.log("[DOM XSS Tracer] Active. Tracking URL taints:", taintedStrings);
+  console.log("[DOMSniper] Active. Tracking URL taints:", taintedStrings);
 
 })();

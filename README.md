@@ -1,8 +1,8 @@
-# DOM XSS Tracer
+# DOMSniper
 
-![DOM XSS Tracer Screenshot](docs/Screenshot%202026-04-26%20203035.png)
+![DOMSniper Screenshot](docs/Screenshot%202026-04-26%20203035.png)
 
-DOM XSS Tracer is a Chrome Extension designed for penetration testers to seamlessly trace DOM-based Cross-Site Scripting (XSS) vulnerabilities.
+DOMSniper is a Chrome Extension designed for penetration testers to seamlessly trace DOM-based Cross-Site Scripting (XSS) vulnerabilities.
 
 ## Features
 - **Sink Hooking**: Intercepts dangerous Javascript sinks like `eval()`, `setTimeout()`, `setInterval()`, `document.write()`, and `.innerHTML`.

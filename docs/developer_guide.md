@@ -1,4 +1,4 @@
-# Developer Guide: DOM XSS Tracer
+# Developer Guide: DOMSniper
 
 ## Architecture
 The extension is built utilizing **Manifest V3** constraints, relying heavily on proper isolation world interactions:
