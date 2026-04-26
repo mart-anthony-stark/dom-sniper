@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DOM XSS Tracer - Test Page</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    button { padding: 10px; margin: 5px; cursor: pointer; }
+    #target { border: 1px dashed #ccc; padding: 10px; margin-top: 20px; min-height: 50px; }
+  </style>
+</head>
+<body>
+  <h1>DOM XSS Tracer Test Page</h1>
+  <p>To test, add a query parameter like <code>?name=Johnny</code> to the URL and hit Enter.</p>
+  
+  <p>Available tests:</p>
+  <button id="btn-eval">Test eval()</button>
+  <button id="btn-timeout">Test setTimeout()</button>
+  <button id="btn-inner">Test innerHTML</button>
+  <button id="btn-write">Test document.write()</button>
+
+  <div id="target"></div>
+
+  <script>
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param) || "default_value";
+    }
+
+    const payload = getQueryParam('name');
+
+    document.getElementById('btn-eval').addEventListener('click', () => {
+      console.log("Running eval...");
+      // Danger!
+      eval("var x = '" + payload + "'; console.log(x);");
+    });
+
+    document.getElementById('btn-timeout').addEventListener('click', () => {
+      console.log("Running setTimeout...");
+      // Danger!
+      setTimeout("console.log('Timeout finished for " + payload + "')", 100);
+    });
+
+    document.getElementById('btn-inner').addEventListener('click', () => {
+      console.log("Running innerHTML...");
+      // Danger!
+      document.getElementById('target').innerHTML = "Hello, <b>" + payload + "</b>!";
+    });
+
+    document.getElementById('btn-write').addEventListener('click', () => {
+      console.log("Running document.write...");
+      // Note: this will overwrite the whole document if called after load
+      // We will do it in an iframe to prevent breaking the main page
+      const frame = document.createElement('iframe');
+      document.getElementById('target').appendChild(frame);
+      frame.contentDocument.write("<html><body>Test write: " + payload + "</body></html>");
+      frame.contentDocument.close();
+    });
+  </script>
+</body>
+</html>
