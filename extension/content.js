@@ -13,13 +13,21 @@ window.addEventListener('DOMSNIPER_ALERT', (e) => {
 // Settings propagation to MAIN world
 function updateSettings() {
   if (chrome && chrome.storage && chrome.storage.local) {
-    chrome.storage.local.get(['enable-visuals', 'show-borders', 'popover-position-left'], (data) => {
+    chrome.storage.local.get(['enable-visuals', 'show-borders', 'show-popovers'], (data) => {
       const settings = {
         enableVisuals: data['enable-visuals'] !== undefined ? data['enable-visuals'] : true,
         showBorders: data['show-borders'] !== undefined ? data['show-borders'] : true,
-        popoverLeft: data['popover-position-left'] !== undefined ? data['popover-position-left'] : false
+        showPopovers: data['show-popovers'] !== undefined ? data['show-popovers'] : true
       };
+      
+      // 1. Set attribute for reactivity
       document.documentElement.setAttribute('data-domsniper-settings', JSON.stringify(settings));
+      
+      // 2. Inject global variable for immediate access
+      const script = document.createElement('script');
+      script.textContent = `window.DOMSNIPER_SETTINGS = ${JSON.stringify(settings)};`;
+      (document.head || document.documentElement).appendChild(script);
+      script.remove();
     });
   }
 }

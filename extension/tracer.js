@@ -85,10 +85,9 @@
     if (value) taintedStrings.push(value);
   });
   if (hash) {
-    taintedStrings.push(hash.substring(1)); // without #
+    taintedStrings.push(hash.substring(1));
   }
 
-  // Filter out tiny strings to avoid false positives (e.g. tracking "1" or "a")
   taintedStrings = taintedStrings.filter(s => s.length > 2);
 
   function escapeHTML(str) {
@@ -104,37 +103,34 @@
     });
   }
 
-
   function getSettings() {
-    if (!document.documentElement) return { enableVisuals: true, showBorders: true, popoverLeft: false };
-    const attr = document.documentElement.getAttribute('data-domsniper-settings');
-    if (attr) {
-      try {
-        return JSON.parse(attr);
-      } catch (e) {}
+    if (document.documentElement) {
+      const attr = document.documentElement.getAttribute('data-domsniper-settings');
+      if (attr) {
+        try {
+          return JSON.parse(attr);
+        } catch (e) {}
+      }
     }
-    return { enableVisuals: true, showBorders: true, popoverLeft: false };
+    return { enableVisuals: true, showBorders: true, showPopovers: true };
   }
 
   function applySettings() {
     const settings = getSettings();
     if (!settings.enableVisuals) {
-      // Hide all alert boxes
       document.querySelectorAll('.domsniper-alert-box').forEach(el => el.style.display = 'none');
-      // Hide global tooltip
       globalTooltip.style.display = 'none';
-      // Remove all highlights
       document.querySelectorAll('.domsniper-vulnerable').forEach(el => el.classList.remove('domsniper-vulnerable'));
     } else {
-      // Restore alert boxes (optional, but good for real-time toggle)
-      document.querySelectorAll('.domsniper-alert-box').forEach(el => el.style.display = 'block');
+      document.querySelectorAll('.domsniper-alert-box').forEach(el => {
+        el.style.display = settings.showPopovers ? 'block' : 'none';
+      });
       if (!settings.showBorders) {
         document.querySelectorAll('.domsniper-vulnerable').forEach(el => el.classList.remove('domsniper-vulnerable'));
       }
     }
   }
 
-  // Observe settings changes
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'attributes' && mutation.attributeName === 'data-domsniper-settings') {
@@ -157,10 +153,8 @@
 
   function checkTaint(sinkName, payload, element = null) {
     if (typeof payload !== 'string') return;
-    
     let isTainted = false;
     let foundTaint = "";
-    
     for (let taint of taintedStrings) {
       if (payload.includes(taint)) {
         isTainted = true;
@@ -168,22 +162,13 @@
         break;
       }
     }
-
-    // Always extract caller info
     const stack = new Error().stack;
     const stackLines = stack.split('\n');
-    // stackLines[0] is Error
-    // stackLines[1] is checkTaint
-    // stackLines[2] is the hook wrapper
-    // stackLines[3] is usually the actual caller we want
     let callerLine = stackLines.length > 3 ? stackLines[3].trim() : (stackLines[2] ? stackLines[2].trim() : "Unknown source");
     
     if (isTainted) {
       const refUrl = getReferenceUrl(sinkName);
-      console.warn(`%c[DOMSniper] 🚨 TAINTED SINK DETECTED!\nSink: ${sinkName}\nPayload: ${payload}\nTaint: ${foundTaint}\nSource: ${callerLine}\nReference: ${refUrl}`, 'background: red; color: white; display: block; padding: 5px;');
       visualAlert(sinkName, payload, foundTaint, callerLine, refUrl, element);
-      
-      // Dispatch event to be picked up by the Isolated World content.js and sent to the background script
       window.dispatchEvent(new CustomEvent('DOMSNIPER_ALERT', { 
         detail: { 
           sinkName: sinkName, 
@@ -194,21 +179,15 @@
           timestamp: Date.now()
         } 
       }));
-    } else {
-      console.info(`[DOMSniper] Sink called: ${sinkName} \nPayload snippet: ${payload.substring(0,50)} \nSource: ${callerLine}`);
     }
   }
 
   function visualAlert(sinkName, payload, taint, caller, refUrl, element = null) {
     const settings = getSettings();
-    
     if (!settings.enableVisuals) return;
 
-    // 1. Highlight the element if provided and enabled
     if (element && element.classList && settings.showBorders) {
       element.classList.add('domsniper-vulnerable');
-      
-      // Set up tooltip events for this specific element
       let isSticky = false;
 
       function updateTooltipContent(sticky = false) {
@@ -251,10 +230,7 @@
           globalTooltip.classList.add('sticky');
           const closeBtn = document.getElementById('domsniper-close-tooltip');
           if (closeBtn) {
-            closeBtn.onclick = (e) => {
-                e.stopPropagation();
-                closeTooltip();
-            };
+            closeBtn.onclick = (e) => { e.stopPropagation(); closeTooltip(); };
           }
         } else {
           globalTooltip.classList.remove('sticky');
@@ -272,16 +248,12 @@
         if (isSticky || globalTooltip._isSticky) return;
         updateTooltipContent(false);
         globalTooltip.style.display = 'block';
-        
         const elementRect = element.getBoundingClientRect();
         const tooltipRect = globalTooltip.getBoundingClientRect();
-        
         let left = elementRect.left;
         let top = elementRect.top - tooltipRect.height - 10;
-        
         if (top < 10) top = elementRect.bottom + 10;
         if (left + tooltipRect.width > window.innerWidth) left = window.innerWidth - tooltipRect.width - 20;
-
         globalTooltip.style.left = Math.max(10, left) + 'px';
         globalTooltip.style.top = Math.max(10, top) + 'px';
       };
@@ -305,7 +277,6 @@
       };
 
       element.onmousemove = null;
-      
       element.onmouseleave = () => {
         if (isSticky || globalTooltip._isSticky) return;
         setTimeout(() => {
@@ -314,42 +285,30 @@
           }
         }, 200);
       };
-
     }
 
-    // 2. Original floating alert box logic
-    // Prevent recursive innerHTML hooking by using standard DOM methods safely
+    if (!settings.showPopovers) return;
+
     const div = document.createElement('div');
     div.className = 'domsniper-alert-box';
     div.style.position = 'fixed';
     div.style.bottom = '10px';
-    if (settings.popoverLeft) {
-      div.style.left = '10px';
-      div.style.borderLeft = 'none';
-      div.style.borderRight = '6px solid #d32f2f';
-    } else {
-      div.style.right = '10px';
-      div.style.borderLeft = '6px solid #d32f2f';
-    }
+    div.style.right = '10px';
+    div.style.borderLeft = '6px solid #d32f2f';
     div.style.backgroundColor = '#1a1a1a';
     div.style.color = '#eeeeee';
     div.style.padding = '15px';
-    div.style.zIndex = '2147483647'; // Max z-index
+    div.style.zIndex = '2147483647';
     div.style.borderRadius = '6px';
     div.style.fontFamily = 'monospace';
     div.style.maxWidth = '450px';
     div.style.wordWrap = 'break-word';
     div.style.border = '1px solid #333';
-    div.style.borderLeft = '6px solid #d32f2f';
     div.style.boxShadow = '0 4px 15px rgba(0,0,0,0.7)';
-    
     div.textContent = '🚨 DOM XSS Alert';
-    
     const details = document.createElement('div');
     details.style.marginTop = '10px';
     details.style.fontSize = '12px';
-    
-    // helper to inject text securely to avoid self-triggering
     function addDetail(label, text) {
       const p = document.createElement('p');
       p.style.margin = '5px 0';
@@ -359,13 +318,10 @@
       p.appendChild(document.createTextNode(text));
       details.appendChild(p);
     }
-
     addDetail('Sink', sinkName);
     addDetail('Taint Source', taint);
     addDetail('Payload', payload.substring(0, 100) + (payload.length > 100 ? '...' : ''));
     addDetail('Code Line', caller);
-
-    // Add clickable reference link safely
     const refP = document.createElement('p');
     refP.style.margin = '5px 0';
     const refB = document.createElement('b');
@@ -378,7 +334,6 @@
     refA.textContent = 'Learn more about this vulnerability';
     refP.appendChild(refA);
     details.appendChild(refP);
-
     div.appendChild(details);
 
     // Close button
