@@ -13,8 +13,9 @@ window.addEventListener('DOMSNIPER_ALERT', (e) => {
 // Settings propagation to MAIN world
 function updateSettings() {
   if (chrome && chrome.storage && chrome.storage.local) {
-    chrome.storage.local.get(['enable-visuals', 'show-borders', 'show-popovers'], (data) => {
+    chrome.storage.local.get(['scanning-enabled', 'enable-visuals', 'show-borders', 'show-popovers'], (data) => {
       const settings = {
+        scanningEnabled: data['scanning-enabled'] !== undefined ? data['scanning-enabled'] : true,
         enableVisuals: data['enable-visuals'] !== undefined ? data['enable-visuals'] : true,
         showBorders: data['show-borders'] !== undefined ? data['show-borders'] : true,
         showPopovers: data['show-popovers'] !== undefined ? data['show-popovers'] : true

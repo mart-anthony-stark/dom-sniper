@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Settings handling
-  const settingsKeys = ['enable-visuals', 'show-borders', 'show-popovers'];
+  const settingsKeys = ['scanning-enabled', 'enable-visuals', 'show-borders', 'show-popovers'];
   
   chrome.storage.local.get(settingsKeys, (data) => {
     settingsKeys.forEach(key => {

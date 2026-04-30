@@ -104,6 +104,7 @@
   }
 
   function getSettings() {
+    // 1. Check for document attribute first (most reactive)
     if (document.documentElement) {
       const attr = document.documentElement.getAttribute('data-domsniper-settings');
       if (attr) {
@@ -112,7 +113,12 @@
         } catch (e) {}
       }
     }
-    return { enableVisuals: true, showBorders: true, showPopovers: true };
+
+    // 2. Fallback to global variable
+    if (window.DOMSNIPER_SETTINGS) return window.DOMSNIPER_SETTINGS;
+    
+    // 3. Default
+    return { scanningEnabled: true, enableVisuals: true, showBorders: true, showPopovers: true };
   }
 
   function applySettings() {
@@ -152,6 +158,9 @@
   }
 
   function checkTaint(sinkName, payload, element = null) {
+    const settings = getSettings();
+    if (!settings.scanningEnabled) return;
+    
     if (typeof payload !== 'string') return;
     let isTainted = false;
     let foundTaint = "";
