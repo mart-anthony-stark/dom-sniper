@@ -50,6 +50,24 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   });
+
+  // Settings handling
+  const settingsKeys = ['enable-visuals', 'show-borders', 'popover-position-left'];
+  
+  chrome.storage.local.get(settingsKeys, (data) => {
+    settingsKeys.forEach(key => {
+      const el = document.getElementById(key);
+      if (el) {
+        // Default to true for visuals and borders, false for left position
+        const defaultValue = (key === 'popover-position-left' ? false : true);
+        el.checked = data[key] !== undefined ? data[key] : defaultValue;
+        
+        el.addEventListener('change', () => {
+          chrome.storage.local.set({ [key]: el.checked });
+        });
+      }
+    });
+  });
 });
 
 function escapeHtml(unsafe) {

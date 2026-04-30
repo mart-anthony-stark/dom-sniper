@@ -54,12 +54,83 @@
       font-weight: bold;
       padding: 20px;
     }
+    .settings-panel {
+      background: #f1f1f1;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 15px;
+      border: 1px solid #ddd;
+    }
+    .settings-panel h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #555;
+    }
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    /* Simple toggle switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 34px;
+      height: 20px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px; width: 14px;
+      left: 3px; bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #d32f2f; }
+    input:checked + .slider:before { transform: translateX(14px); }
   </style>
 </head>
 <body>
   <h2>🚨 DOMSniper Traces</h2>
   <div id="alerts-container">
     <div id="no-alerts">No DOM XSS alerts found on this page!</div>
+  </div>
+
+  <div class="settings-panel">
+    <h3>Visual Configuration</h3>
+    <div class="setting-item">
+      <span>Enable Visual Alerts</span>
+      <label class="switch">
+        <input type="checkbox" id="enable-visuals" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-item">
+      <span>Show Area Highlights</span>
+      <label class="switch">
+        <input type="checkbox" id="show-borders" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-item">
+      <span>Popovers on Bottom Left</span>
+      <label class="switch">
+        <input type="checkbox" id="popover-position-left">
+        <span class="slider"></span>
+      </label>
+    </div>
   </div>
   <script src="popup.js"></script>
 </body>
